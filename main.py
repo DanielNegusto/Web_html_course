@@ -1,5 +1,6 @@
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
+import os
 
 # Настройки сервера
 hostName = "localhost"
@@ -18,6 +19,10 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.path = 'about.html'
         elif self.path == '/contact':
             self.path = 'contact.html'
+        else:
+            # Если путь не найден, возвращаем 404
+            self.send_error(404, "File not found")
+            return
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
@@ -40,9 +45,13 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-type", "text/html")
             self.end_headers()
 
-            # Чтение содержимого HTML-файла
-            with open('contact.html', 'r', encoding='utf-8') as file:
-                html_content = file.read()
+            # Проверка существования файла
+            if os.path.exists('contact.html'):
+                # Чтение содержимого HTML-файла
+                with open('contact.html', 'r', encoding='utf-8') as file:
+                    html_content = file.read()
+            else:
+                html_content = "<html><body><h1>Файл не найден</h1></body></html>"
 
             # Отправка HTML-кода в ответе
             self.wfile.write(html_content.encode('utf-8'))
@@ -51,17 +60,11 @@ class MyHandler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    # Инициализация веб-сервера
-    webServer = HTTPServer((hostName, serverPort), MyHandler)
-    print(f"Сервер запущен на http://{hostName}:{serverPort}")
-
-    try:
-        # Запуск сервера
-        webServer.serve_forever()
-    except KeyboardInterrupt:
-        # Корректный способ остановить сервер
-        pass
-
-    # Остановка сервера
-    webServer.server_close()
-    print("Сервер остановлен.")
+    # noinspection PyTypeChecker
+    with HTTPServer((hostName, serverPort), MyHandler) as webServer:
+        print(f"Сервер запущен на http://{hostName}:{serverPort}")
+        try:
+            webServer.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        print("Сервер остановлен.")
