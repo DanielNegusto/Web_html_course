@@ -19,10 +19,6 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.path = 'about.html'
         elif self.path == '/contact':
             self.path = 'contact.html'
-        else:
-            # Если путь не найден, возвращаем 404
-            self.send_error(404, "File not found")
-            return
         return SimpleHTTPRequestHandler.do_GET(self)
 
     def do_POST(self):
